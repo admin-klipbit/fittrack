@@ -1,18 +1,39 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Stack, router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { activeWorkout, initDb } from '@/lib/db';
+import { initMirror, mirrorAll } from '@/lib/mirror';
+import { syncCalendar } from '@/lib/calendar';
+import { C } from '@/lib/theme';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+export default function RootLayout() {
+  const [ready, setReady] = useState(false);
 
-SplashScreen.preventAutoHideAsync();
+  useEffect(() => {
+    (async () => {
+      await initMirror();
+      initDb();
+      mirrorAll();
+      setReady(true);
+      syncCalendar().catch(() => {});
+      // Killed mid-workout? Drop straight back into the session.
+      if (activeWorkout()) setTimeout(() => router.push('/workout/active'), 0);
+    })();
+  }, []);
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  if (!ready) return null; // splash stays up
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <>
+      <StatusBar style="light" />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="workout/active" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="photos/capture" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="exercise/[id]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="cardio/log" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
+      </Stack>
+    </>
   );
 }
