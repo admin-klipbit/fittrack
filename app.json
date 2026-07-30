@@ -84,12 +84,6 @@
         }
       ],
       [
-        "expo-calendar",
-        {
-          "calendarPermission": "FitTrack creates a dedicated calendar with your planned workouts and cardio."
-        }
-      ],
-      [
         "expo-notifications",
         {
           "defaultChannel": "default"

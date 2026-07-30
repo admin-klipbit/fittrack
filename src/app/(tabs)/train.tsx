@@ -4,13 +4,12 @@ import { useCallback, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Btn, Card, Label, Screen, Segmented, Sub } from '@/components/ui';
-import { HeatMap } from '@/components/heat-map';
+import { HeatMap, WeekStrip } from '@/components/heat-map';
 import {
   activeWorkout, cardioStreakWeeks, suggestedDay, activityMarks,
   exercisesForDay, getSetting, listCardio, thisWeekCounts,
   unitShort,
 } from '@/lib/db';
-import { calendarEnabled, postponeNext } from '@/lib/calendar';
 import { DAYS, DAY_NAMES, Day, addDays, today, DEFAULT_CARDIO_PER_WEEK } from '@/lib/program';
 import { C } from '@/lib/theme';
 
@@ -25,14 +24,6 @@ export default function Train() {
   const cardioTarget = Number(getSetting('cardio_target', String(DEFAULT_CARDIO_PER_WEEK)));
   const recentCardio = listCardio(5);
 
-  const postpone = async (type: 'workout' | 'cardio') => {
-    if (!calendarEnabled()) {
-      Alert.alert('Calendar sync is off', 'Nothing is ever missed anyway — the queue just rolls forward. Turn on calendar sync in Settings to move planned events.');
-      return;
-    }
-    const moved = await postponeNext(type);
-    Alert.alert(moved ? `Moved to ${moved} 👍` : 'No upcoming planned event found');
-  };
 
   return (
     <Screen title="Train">
@@ -59,7 +50,6 @@ export default function Train() {
           <Btn title={`Start Day ${day}`} onPress={() => router.push(`/workout/active?day=${day}`)} />
         )}
         <Btn kind="ghost" title="+ Add exercise" onPress={() => router.push('/exercise/new')} />
-        <Btn kind="ghost" title="Postpone next planned workout" onPress={() => postpone('workout')} />
       </Card>
 
       <Card>
@@ -68,7 +58,6 @@ export default function Train() {
           <Btn style={{ flex: 1 }} title="Log run 🏃" onPress={() => router.push('/cardio/log?type=run')} />
           <Btn style={{ flex: 1 }} title="Log swim 🏊" onPress={() => router.push('/cardio/log?type=swim')} />
         </View>
-        <Btn kind="ghost" title="Postpone next planned cardio" onPress={() => postpone('cardio')} />
         {recentCardio.map((c) => (
           <View key={c.id} style={s.exRow}>
             <Text style={s.exName}>{c.type === 'run' ? '🏃 Run' : '🏊 Swim'} · {c.date}</Text>
@@ -79,6 +68,11 @@ export default function Train() {
             </Text>
           </View>
         ))}
+      </Card>
+
+      <Card>
+        <Label>This week</Label>
+        <WeekStrip marks={activityMarks(addDays(today(), -6), addDays(today(), 6))} />
       </Card>
 
       <Card>

@@ -1,4 +1,4 @@
-// Settings: calendar sync, reminders, weekly targets, block names, export, iCloud status.
+// Settings: reminders, weekly targets, block names, export, iCloud status.
 
 import { useState } from 'react';
 import { Alert, StyleSheet, Switch, TextInput, View } from 'react-native';
@@ -7,9 +7,6 @@ import * as Sharing from 'expo-sharing';
 import * as Updates from 'expo-updates';
 import { Btn, Card, Label, Screen, Segmented, Stepper, Sub } from '@/components/ui';
 import { blockMeta, getSetting, setSetting } from '@/lib/db';
-import {
-  calendarEnabled, disableCalendarSync, enableCalendarSync, planConfig, syncCalendar,
-} from '@/lib/calendar';
 import { DAY_LABELS, photoDay, setWeeklyReminders } from '@/lib/notifications';
 import { isICloud, mirrorRootUri, writeExportFile } from '@/lib/mirror';
 import {
@@ -18,26 +15,12 @@ import {
 import { C } from '@/lib/theme';
 
 export default function Settings() {
-  const [calOn, setCalOn] = useState(calendarEnabled());
   const [remOn, setRemOn] = useState(getSetting('reminders', '0') === '1');
   const [pDay, setPDay] = useState(photoDay());
-  const cfg = planConfig();
-  const [workoutTime, setWorkoutTime] = useState(cfg.workoutTime);
-  const [cardioTime, setCardioTime] = useState(cfg.cardioTime);
   const [sessions, setSessions] = useState(Number(getSetting('sessions_target', String(DEFAULT_SESSIONS_PER_WEEK))));
   const [cardio, setCardio] = useState(Number(getSetting('cardio_target', String(DEFAULT_CARDIO_PER_WEEK))));
   const [blocks, setBlocks] = useState(() => [1, 2, 3, 4].map((b) => ({ b, ...blockMeta(b) })));
 
-  const toggleCal = async (on: boolean) => {
-    if (on) {
-      const ok = await enableCalendarSync();
-      if (!ok) Alert.alert('Calendar permission denied', 'Enable it in iOS Settings → FitTrack.');
-      setCalOn(ok);
-    } else {
-      await disableCalendarSync();
-      setCalOn(false);
-    }
-  };
 
   const toggleRem = async (on: boolean) => {
     setRemOn(on);
@@ -45,16 +28,6 @@ export default function Settings() {
     await setWeeklyReminders(on);
   };
 
-  const saveTimes = async () => {
-    if (!/^\d{2}:\d{2}$/.test(workoutTime) || !/^\d{2}:\d{2}$/.test(cardioTime)) {
-      Alert.alert('Times must be HH:MM');
-      return;
-    }
-    setSetting('workout_time', workoutTime);
-    setSetting('cardio_time', cardioTime);
-    if (calOn) await syncCalendar();
-    Alert.alert('Saved');
-  };
 
   const exportData = async () => {
     const uri = writeExportFile();
@@ -84,25 +57,6 @@ export default function Settings() {
 
   return (
     <Screen title="Settings" back>
-      <Card>
-        <View style={s.row}>
-          <Label>Calendar sync</Label>
-          <Switch value={calOn} onValueChange={toggleCal} trackColor={{ true: C.accent }} />
-        </View>
-        <Sub>Creates a “FitTrack” calendar. Completing a workout marks the event ✅; unfinished events roll forward.</Sub>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <View style={{ flex: 1 }}>
-            <Sub>Workout time</Sub>
-            <TextInput style={s.input} value={workoutTime} onChangeText={setWorkoutTime} placeholder="07:00" placeholderTextColor={C.sub} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Sub>Cardio time</Sub>
-            <TextInput style={s.input} value={cardioTime} onChangeText={setCardioTime} placeholder="18:00" placeholderTextColor={C.sub} />
-          </View>
-        </View>
-        <Btn kind="ghost" title="Save times" onPress={saveTimes} />
-      </Card>
-
       <Card>
         <View style={s.row}>
           <Label>Reminders</Label>

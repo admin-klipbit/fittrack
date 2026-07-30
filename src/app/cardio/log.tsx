@@ -11,7 +11,6 @@ import * as Haptics from 'expo-haptics';
 import { Btn, Card, Label, Screen, Sub } from '@/components/ui';
 import { addCardio } from '@/lib/db';
 import { photoExists, savePhoto } from '@/lib/mirror';
-import { markDoneToday } from '@/lib/calendar';
 import { today } from '@/lib/program';
 import { C } from '@/lib/theme';
 
@@ -51,7 +50,6 @@ export default function CardioLog() {
       note: note.trim() || null,
       photo,
     });
-    markDoneToday('cardio').catch(() => {});
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
   };

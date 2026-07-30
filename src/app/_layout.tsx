@@ -3,7 +3,6 @@ import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { activeWorkout, initDb } from '@/lib/db';
 import { initMirror, mirrorAll } from '@/lib/mirror';
-import { syncCalendar } from '@/lib/calendar';
 import { C } from '@/lib/theme';
 
 export default function RootLayout() {
@@ -15,7 +14,6 @@ export default function RootLayout() {
       initDb();
       mirrorAll();
       setReady(true);
-      syncCalendar().catch(() => {});
       // Killed mid-workout? Drop straight back into the session.
       if (activeWorkout()) setTimeout(() => router.push('/workout/active'), 0);
     })();

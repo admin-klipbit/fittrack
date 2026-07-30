@@ -66,7 +66,6 @@ Example launchd plist (`~/Library/LaunchAgents/com.klipbit.fittrack-review.plist
 - `src/lib/db.ts` — SQLite schema, seed (plan + start weight), all data access
 - `src/lib/mirror.ts` — iCloud/local JSON + photo write-through mirror
 - `src/lib/program.ts` — plan constants, block/week math
-- `src/lib/calendar.ts` — FitTrack calendar: planned events, ✅ on completion, roll-forward
 - `src/app/workout/active.tsx` — in-gym logger (steppers, rest timer, keep-awake, crash restore)
 - `src/app/photos/capture.tsx` — ghost-overlay progress photo capture
 - `modules/icloud/` — 20-line native module exposing the iCloud container path

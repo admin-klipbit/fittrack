@@ -273,7 +273,8 @@ export function completedWorkouts(limit = 50): Workout[] {
 // Weekly plan (user, effective 2026-08-03): Mon=C legs (pool closed Mondays, so the
 // week opens with the no-swim day), Tue=A, Wed=B, Thu=A, Fri=B, Sun official rest.
 // Sat/Sun fall back to the rolling A->B->C queue if they train anyway.
-const WEEKDAY_PLAN: Record<number, Day> = { 1: 'C', 2: 'A', 3: 'B', 4: 'A', 5: 'B' };
+export const WEEKDAY_PLAN: Record<number, Day> = { 1: 'C', 2: 'A', 3: 'B', 4: 'A', 5: 'B' };
+export const SWIM_PLAN_DAYS = [2, 4, 6]; // Tue/Thu/Sat — pool closed Mondays, Sunday rest
 export function suggestedDay(): Day {
   return WEEKDAY_PLAN[new Date().getDay()] ?? DAYS[completedWorkoutCount() % 3];
 }

@@ -15,7 +15,6 @@ import {
   finishWorkout, logSet, progression, saveWorkoutPos, setWorkoutNote, setsForWorkout, startWorkout, suggestedDay,
   unitLabel, unitShort, weightLabel,
 } from '@/lib/db';
-import { markDoneToday } from '@/lib/calendar';
 import { photoUri } from '@/lib/mirror';
 import { EXERCISE_IMAGES } from '@/lib/exercise-images';
 import { DAYS, DAY_NAMES, Day } from '@/lib/program';
@@ -93,7 +92,6 @@ export default function ActiveWorkout() {
     }
     setWorkoutNote(workout.id, note);
     finishWorkout(workout.id);
-    markDoneToday('workout').catch(() => {});
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.replace(`/workout/summary?id=${workout.id}`);
   };
