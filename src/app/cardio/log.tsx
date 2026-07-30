@@ -79,7 +79,7 @@ export default function CardioLog() {
             <TextInput style={s.input} placeholder="Distance (km)" placeholderTextColor={C.sub}
               keyboardType="decimal-pad" value={distance} onChangeText={setDistance} />
           ) : (
-            <TextInput style={s.input} placeholder="Meters / laps" placeholderTextColor={C.sub}
+            <TextInput style={s.input} placeholder="Laps (out + back = 1)" placeholderTextColor={C.sub}
               keyboardType="number-pad" value={meters} onChangeText={setMeters} />
           )}
         </View>

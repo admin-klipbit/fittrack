@@ -74,7 +74,7 @@ export default function Train() {
             <Text style={s.exName}>{c.type === 'run' ? '🏃 Run' : '🏊 Swim'} · {c.date}</Text>
             <Text style={s.exMeta}>
               {c.distance_km ? `${c.distance_km}km ` : ''}
-              {c.meters ? `${c.meters}m ` : ''}
+              {c.meters ? `${c.meters} laps ` : ''}
               {c.duration_min ? `${c.duration_min}min` : c.photo ? 'screenshot 📎' : ''}
             </Text>
           </View>

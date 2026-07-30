@@ -31,7 +31,8 @@ export type SetRow = {
 };
 export type Cardio = {
   id: number; date: string; type: 'run' | 'swim';
-  duration_min: number | null; distance_km: number | null; meters: number | null;
+  duration_min: number | null; distance_km: number | null;
+  meters: number | null; // swims: laps (out + back = 1); building's raia ~20m => ~40m per lap
   rpe: number | null; note: string | null; photo: string | null;
 };
 export type Weighin = { id: number; date: string; kg: number };
