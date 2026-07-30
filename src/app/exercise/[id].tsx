@@ -7,7 +7,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Btn, Card, Label, Screen, Segmented, Stepper, Sub } from '@/components/ui';
-import { addCustomExercise, getExercise, updateExercise } from '@/lib/db';
+import { addCustomExercise, getExercise, unitShort, updateExercise, weightLabel } from '@/lib/db';
 import { photoUri, savePhoto } from '@/lib/mirror';
 import { EXERCISE_IMAGES } from '@/lib/exercise-images';
 import { DAYS, Day, today } from '@/lib/program';
@@ -63,10 +63,10 @@ function ExerciseDetail({ id }: { id: string }) {
 
       <Card>
         <Sub>Plan: Day {e.day} · {e.sets}×{e.rep_high}{e.per_side ? '/side' : ''} · +{e.increment}kg on progression</Sub>
-        <Stepper label={e.unit === 'placas' ? 'WORKING PLACAS' : 'WORKING WEIGHT'} value={e.weight}
+        <Stepper label={weightLabel(e.unit)} value={e.weight}
           step={e.unit === 'placas' ? 1 : 0.5}
           onChange={(v) => set({ weight: v })}
-          format={(v) => `${v}${e.unit === 'placas' ? ' pl' : 'kg'}`} />
+          format={(v) => `${v}${unitShort(e.unit)}`} />
         <Stepper label="REST (SECONDS)" value={e.rest_sec} step={15} min={15}
           onChange={(v) => set({ rest_sec: v })} format={(v) => `${v}s`} />
       </Card>

@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Btn, Card, Label, Screen, Sub } from '@/components/ui';
-import { getExercise, getWorkout, maxWeightBefore, progression, setsForWorkout } from '@/lib/db';
+import { getExercise, getWorkout, maxWeightBefore, progression, setsForWorkout, unitLabel, unitShort } from '@/lib/db';
 import { C } from '@/lib/theme';
 
 export default function Summary() {
@@ -48,12 +48,12 @@ export default function Summary() {
       {byExercise.map(({ e, mine, best, isPR, next }) => (
         <Card key={e?.id ?? Math.random()}>
           <Label>
-            {e?.name ?? 'Exercise'} {isPR && <Text style={{ color: C.accent }}>· PR {best}{e?.unit === 'placas' ? ' pl' : 'kg'} 🎉</Text>}
+            {e?.name ?? 'Exercise'} {isPR && <Text style={{ color: C.accent }}>· PR {best}{unitShort(e?.unit)} 🎉</Text>}
           </Label>
           <Sub>{mine.map((s) => `${s.weight}×${s.reps}`).join('  ·  ')}</Sub>
           {next?.increase && (
             <Sub style={{ color: C.accent }}>
-              ⬆ Next time: {next.weight}{e?.unit === 'placas' ? ' placas' : 'kg'}, target {next.targetReps} reps
+              ⬆ Next time: {next.weight}{unitLabel(e?.unit)}, target {next.targetReps} reps
             </Sub>
           )}
         </Card>

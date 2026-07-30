@@ -13,6 +13,7 @@ import { RestTimer } from '@/components/rest-timer';
 import {
   Exercise, activeWorkout, completedWorkoutCount, discardWorkout, exercisesForDay,
   finishWorkout, logSet, progression, saveWorkoutPos, setsForWorkout, startWorkout,
+  unitLabel, unitShort, weightLabel,
 } from '@/lib/db';
 import { markDoneToday } from '@/lib/calendar';
 import { photoUri } from '@/lib/mirror';
@@ -136,7 +137,7 @@ export default function ActiveWorkout() {
 
         {prog.increase && (
           <View style={s.badge}>
-            <Text style={s.badgeText}>⬆ Increase weight — {prog.weight}{cur.unit === 'placas' ? ' placas' : 'kg'}, target {prog.targetReps} reps</Text>
+            <Text style={s.badgeText}>⬆ Increase weight — {prog.weight}{unitLabel(cur.unit)}, target {prog.targetReps} reps</Text>
           </View>
         )}
 
@@ -155,12 +156,12 @@ export default function ActiveWorkout() {
         </Pressable>
 
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          <Stepper label={cur.unit === 'placas' ? 'PLACAS' : 'WEIGHT'} value={weight} step={cur.unit === 'placas' ? 1 : 1} onChange={setWeight}
-            format={(v) => `${v}${cur.unit === 'placas' ? ' pl' : 'kg'}`} />
+          <Stepper label={weightLabel(cur.unit)} value={weight} step={1} onChange={setWeight}
+            format={(v) => `${v}${unitShort(cur.unit)}`} />
           <Stepper label="REPS" value={reps} step={1} min={1} onChange={setReps} />
         </View>
 
-        <Btn title={`✓  Log set — ${weight}${cur.unit === 'placas' ? ' placas' : 'kg'} × ${reps}`} onPress={() => advance(true)}
+        <Btn title={`✓  Log set — ${weight}${unitLabel(cur.unit)} × ${reps}`} onPress={() => advance(true)}
           style={{ paddingVertical: 20 }} />
 
         <RestTimer seconds={restSec.current} runId={restRun} />
@@ -168,7 +169,7 @@ export default function ActiveWorkout() {
         {doneSets.length > 0 && (
           <Card style={{ paddingVertical: 10 }}>
             {doneSets.map((d) => (
-              <Sub key={d.id}>Set {d.set_no}: {d.weight}{cur.unit === 'placas' ? ' pl' : 'kg'} × {d.reps} ✓</Sub>
+              <Sub key={d.id}>Set {d.set_no}: {d.weight}{unitShort(cur.unit)} × {d.reps} ✓</Sub>
             ))}
           </Card>
         )}

@@ -16,7 +16,11 @@ export type Exercise = {
   unit: string; // 'kg' | 'placas' (cable-stack plate count)
 };
 
-export const unitLabel = (u?: string) => (u === 'placas' ? ' placas' : 'kg');
+// Weight semantics: 'kg_each' = weight of ONE dumbbell (one in each hand / per side);
+// plain 'kg' = total weight of the single implement (goblet DB, EZ bar, one overhead DB).
+export const unitLabel = (u?: string) => (u === 'placas' ? ' placas' : u === 'kg_each' ? 'kg each' : 'kg');
+export const unitShort = (u?: string) => (u === 'placas' ? ' pl' : u === 'kg_each' ? 'kg ea' : 'kg');
+export const weightLabel = (u?: string) => (u === 'placas' ? 'PLACAS' : u === 'kg_each' ? 'WEIGHT (EACH DB)' : 'WEIGHT');
 export type Workout = {
   id: number; day: Day; started_at: string; finished_at: string | null;
   cur_ex: number; cur_set: number;
@@ -104,6 +108,34 @@ function migrate() {
     }
     setSetting('placas_migrated', '1');
     mirrorData('workouts');
+  }
+  // Mark two-DB moves so the UI can say whether weight is per dumbbell or total.
+  if (getSetting('units_each_migrated') !== '1') {
+    const each = [
+      'Dumbbell_Bench_Press', 'Incline_Dumbbell_Press', 'Dumbbell_Flyes', 'Seated_Dumbbell_Press',
+      'Side_Lateral_Raise', 'Reverse_Flyes', 'Alternate_Hammer_Curl', 'One-Arm_Dumbbell_Row',
+      'Stiff-Legged_Dumbbell_Deadlift', 'Standing_Dumbbell_Calf_Raise', 'Dumbbell_Lunges',
+      'Split_Squat_with_Dumbbells',
+    ];
+    db.runSync(
+      `UPDATE exercises SET unit='kg_each' WHERE unit='kg' AND id IN (${each.map(() => '?').join(',')})`,
+      each,
+    );
+    setSetting('units_each_migrated', '1');
+  }
+  // User swapped DB curls for an EZ bar ("rosca direta barra W", 2026-07-24) — one
+  // both-arms movement instead of two DBs. Weight is the whole bar. Same row/id, so
+  // the 15–16kg sets already logged under DB Curl stay attached.
+  if (getSetting('ezbar_migrated') !== '1') {
+    db.runSync(
+      `UPDATE exercises SET name='EZ-Bar Curl (Barra W)', weight=16, cues=? WHERE id='Dumbbell_Bicep_Curl'`,
+      [JSON.stringify([
+        'Shoulder-width grip on the angled bar',
+        'Elbows pinned — no leaning back or shrugging',
+        'Full stretch at the bottom every rep',
+      ])],
+    );
+    setSetting('ezbar_migrated', '1');
   }
 }
 

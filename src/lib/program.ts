@@ -106,9 +106,9 @@ export const SEED_EXERCISES: SeedExercise[] = [
     'Curl one arm at a time, no shoulder swing',
     'Squeeze at the top, slow negative',
   ], true),
-  ex('B', 6, 'DB Curl', 'Dumbbell_Bicep_Curl', 3, 8, 12, 7, 1, 60, [
-    'Palms up, elbows pinned to your sides',
-    'Curl without leaning back or shrugging',
+  ex('B', 6, 'EZ-Bar Curl (Barra W)', 'Dumbbell_Bicep_Curl', 3, 8, 12, 16, 1, 60, [
+    'Shoulder-width grip on the angled bar',
+    'Elbows pinned — no leaning back or shrugging',
     'Full stretch at the bottom every rep',
   ]),
   // Day C — Legs

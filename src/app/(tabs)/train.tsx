@@ -8,6 +8,7 @@ import { HeatMap } from '@/components/heat-map';
 import {
   activeWorkout, cardioStreakWeeks, completedWorkoutCount, activityMarks,
   exercisesForDay, getSetting, listCardio, thisWeekCounts,
+  unitShort,
 } from '@/lib/db';
 import { calendarEnabled, postponeNext } from '@/lib/calendar';
 import { DAYS, DAY_NAMES, Day, addDays, today, DEFAULT_CARDIO_PER_WEEK } from '@/lib/program';
@@ -48,7 +49,7 @@ export default function Train() {
           <Pressable key={e.id} onPress={() => router.push(`/exercise/${e.id}`)} style={s.exRow}>
             <Text style={s.exName}>{e.name}</Text>
             <Text style={s.exMeta}>
-              {e.sets}×{e.rep_high} @ {e.weight}{e.unit === 'placas' ? ' pl' : 'kg'}{e.per_side ? '/side' : ''}
+              {e.sets}×{e.rep_high} @ {e.weight}{unitShort(e.unit)}
             </Text>
           </Pressable>
         ))}
