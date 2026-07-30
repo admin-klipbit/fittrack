@@ -19,7 +19,7 @@ The app renders `review/latest-review.md` in the Coach tab. If iCloud is unavail
 
 ## The plan (pre-seeded, all weights editable)
 
-A/B/C split for dumbbells + bench + lat pulldown only. Rolling queue A→B→C: "Start Workout" always offers the next day in the sequence — missing a day shifts the schedule, nothing is ever "missed". Double progression: hit the top reps on every set → the app badges "⬆ Increase weight" and prefills the next increment at the low rep target.
+A/B/C split for dumbbells + bench + lat pulldown only. Weekly plan: Mon = C (legs — pool is closed Mondays), Tue/Thu = A, Wed/Fri = B, Sunday rest; weekends fall back to a rolling A→B→C queue. Skipping a day never "misses" anything — the suggestion follows the weekday. Double progression: hit the top reps on every set → the app badges "⬆ Increase weight" and prefills the next increment at the low rep target.
 
 ## Development
 

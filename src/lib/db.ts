@@ -1,6 +1,6 @@
 import { openDatabaseSync } from 'expo-sqlite';
 import {
-  DEFAULT_BLOCKS, Day, PROGRAM_START, SEED_EXERCISES, START_WEIGHT, localISODate, programWeek, weekDates,
+  DAYS, DEFAULT_BLOCKS, Day, PROGRAM_START, SEED_EXERCISES, START_WEIGHT, localISODate, programWeek, weekDates,
 } from './program';
 import { mirrorData } from './mirror';
 
@@ -270,6 +270,13 @@ export function setsForWorkout(workoutId: number): SetRow[] {
 }
 export function completedWorkouts(limit = 50): Workout[] {
   return db.getAllSync<Workout>('SELECT * FROM workouts WHERE finished_at IS NOT NULL ORDER BY started_at DESC LIMIT ?', [limit]);
+}
+// Weekly plan (user, effective 2026-08-03): Mon=C legs (pool closed Mondays, so the
+// week opens with the no-swim day), Tue=A, Wed=B, Thu=A, Fri=B, Sun official rest.
+// Sat/Sun fall back to the rolling A->B->C queue if they train anyway.
+const WEEKDAY_PLAN: Record<number, Day> = { 1: 'C', 2: 'A', 3: 'B', 4: 'A', 5: 'B' };
+export function suggestedDay(): Day {
+  return WEEKDAY_PLAN[new Date().getDay()] ?? DAYS[completedWorkoutCount() % 3];
 }
 export function completedWorkoutCount(): number {
   return db.getFirstSync<{ n: number }>('SELECT COUNT(*) n FROM workouts WHERE finished_at IS NOT NULL')?.n ?? 0;

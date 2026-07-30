@@ -7,13 +7,13 @@ import { SymbolView } from 'expo-symbols';
 import { Btn, Card, Label, Screen, Sub } from '@/components/ui';
 import { LineChart } from '@/components/line-chart';
 import {
-  activeWorkout, blockMeta, cardioStreakWeeks, completedWorkoutCount, getSetting,
+  activeWorkout, blockMeta, cardioStreakWeeks, getSetting, suggestedDay,
   latestProgressPhoto, thisWeekCounts, weighinsWithAvg,
 } from '@/lib/db';
 import { readReview } from '@/lib/mirror';
 import { photoDay } from '@/lib/notifications';
 import {
-  DAYS, DAY_NAMES, DEFAULT_CARDIO_PER_WEEK, DEFAULT_SESSIONS_PER_WEEK, TOTAL_WEEKS,
+  DAY_NAMES, DEFAULT_CARDIO_PER_WEEK, DEFAULT_SESSIONS_PER_WEEK, TOTAL_WEEKS,
   blockInfo, programWeek, today,
 } from '@/lib/program';
 import { C } from '@/lib/theme';
@@ -26,7 +26,7 @@ export default function Dashboard() {
   const { block, weekInBlock } = blockInfo(week);
   const meta = blockMeta(block);
   const active = activeWorkout();
-  const nextDay = DAYS[completedWorkoutCount() % 3];
+  const nextDay = suggestedDay();
   const counts = thisWeekCounts();
   const sessionsTarget = Number(getSetting('sessions_target', String(DEFAULT_SESSIONS_PER_WEEK)));
   const cardioTarget = Number(getSetting('cardio_target', String(DEFAULT_CARDIO_PER_WEEK)));

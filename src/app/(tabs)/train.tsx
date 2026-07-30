@@ -1,4 +1,4 @@
-// Train: start workouts (rolling A→B→C queue), edit the plan, log cardio.
+// Train: start workouts (weekly plan: Mon legs, then A/B alternating), edit the plan, log cardio.
 
 import { useCallback, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -6,7 +6,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { Btn, Card, Label, Screen, Segmented, Sub } from '@/components/ui';
 import { HeatMap } from '@/components/heat-map';
 import {
-  activeWorkout, cardioStreakWeeks, completedWorkoutCount, activityMarks,
+  activeWorkout, cardioStreakWeeks, suggestedDay, activityMarks,
   exercisesForDay, getSetting, listCardio, thisWeekCounts,
   unitShort,
 } from '@/lib/db';
@@ -17,7 +17,7 @@ import { C } from '@/lib/theme';
 export default function Train() {
   const [, setTick] = useState(0);
   useFocusEffect(useCallback(() => setTick((t) => t + 1), []));
-  const suggested = DAYS[completedWorkoutCount() % 3];
+  const suggested = suggestedDay();
   const [day, setDay] = useState<Day>(suggested);
   const exs = exercisesForDay(day);
   const active = activeWorkout();
@@ -37,7 +37,7 @@ export default function Train() {
   return (
     <Screen title="Train">
       <Card>
-        <Sub>Rolling queue — next up: Day {suggested}. Nothing is ever “missed”.</Sub>
+        <Sub>Mon legs · Tue/Thu chest · Wed/Fri back — today: Day {suggested}. Nothing is ever “missed”.</Sub>
         <Segmented
           options={DAYS}
           value={day}

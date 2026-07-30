@@ -11,8 +11,8 @@ import { Image } from 'expo-image';
 import { Btn, Card, Label, Stepper, Sub } from '@/components/ui';
 import { RestTimer } from '@/components/rest-timer';
 import {
-  Exercise, activeWorkout, completedWorkoutCount, discardWorkout, exercisesForDay,
-  finishWorkout, logSet, progression, saveWorkoutPos, setWorkoutNote, setsForWorkout, startWorkout,
+  Exercise, activeWorkout, discardWorkout, exercisesForDay,
+  finishWorkout, logSet, progression, saveWorkoutPos, setWorkoutNote, setsForWorkout, startWorkout, suggestedDay,
   unitLabel, unitShort, weightLabel,
 } from '@/lib/db';
 import { markDoneToday } from '@/lib/calendar';
@@ -25,7 +25,7 @@ export default function ActiveWorkout() {
   useKeepAwake();
   const params = useLocalSearchParams<{ day?: string }>();
   const [workout] = useState(() =>
-    activeWorkout() ?? startWorkout((params.day as Day) ?? DAYS[completedWorkoutCount() % 3]));
+    activeWorkout() ?? startWorkout((params.day as Day) ?? suggestedDay()));
   const exs = useMemo(() => exercisesForDay(workout.day), [workout.day]);
 
   const [exIdx, setExIdx] = useState(Math.min(workout.cur_ex, Math.max(0, exs.length - 1)));
