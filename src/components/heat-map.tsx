@@ -1,10 +1,11 @@
-// 8-week activity heat map + current-week plan strip.
+// Month activity calendar + current-week plan strip.
 // marks: date -> 1 workout | 2 cardio | 3 both.
 
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { C } from '@/lib/theme';
-import { SWIM_PLAN_DAYS, WEEKDAY_PLAN } from '@/lib/db';
-import { addDays, today } from '@/lib/program';
+import { SWIM_PLAN_DAYS, WEEKDAY_PLAN, activityMarks } from '@/lib/db';
+import { addDays, parseDate, today } from '@/lib/program';
 
 const COLORS: Record<number, string> = {
   0: C.bg, 1: C.accentDim, 2: '#2B6CB0', 3: C.accent,
@@ -45,53 +46,60 @@ export function WeekStrip({ marks }: { marks: Record<string, number> }) {
   );
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-/** Real calendar of the last `weeks` weeks: rows = weeks (oldest on top), columns =
- *  Mon–Sun, day-of-month in each cell, month labels in the left gutter. */
-export function HeatMap({ marks, weeks = 8 }: { marks: Record<string, number>; weeks?: number }) {
+/** Regular month calendar: weeks as Mon–Sun rows, days colored by activity. */
+export function MonthCalendar() {
+  const [ym, setYm] = useState(() => today().slice(0, 7)); // 'YYYY-MM'
   const t = today();
-  const monday = addDays(t, -(((new Date(t + 'T00:00:00').getDay() + 6) % 7)));
-  const firstMonday = addDays(monday, -7 * (weeks - 1));
-  let prevMonth = -1;
+  const [y, m] = ym.split('-').map(Number);
+  const first = `${ym}-01`;
+  const offset = (parseDate(first).getDay() + 6) % 7; // days shown before the 1st
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const rows = Math.ceil((offset + daysInMonth) / 7);
+  const gridStart = addDays(first, -offset);
+  const marks = activityMarks(gridStart, addDays(gridStart, rows * 7 - 1));
+  const shift = (d: number) => {
+    const nm = new Date(y, m - 1 + d, 1);
+    setYm(`${nm.getFullYear()}-${String(nm.getMonth() + 1).padStart(2, '0')}`);
+  };
   return (
     <View style={s.wrap}>
+      <View style={s.monthHead}>
+        <Pressable onPress={() => shift(-1)} hitSlop={10}><Text style={s.nav}>‹</Text></Pressable>
+        <Text style={s.monthTitle}>{MONTHS[m - 1]} {y}</Text>
+        <Pressable onPress={() => shift(1)} hitSlop={10}><Text style={s.nav}>›</Text></Pressable>
+      </View>
       <View style={s.calRow}>
-        <Text style={s.gutter} />
         {Array.from({ length: 7 }, (_, d) => (
-          <Text key={d} style={[s.calHead]}>{'MTWTFSS'[d]}</Text>
+          <Text key={d} style={s.calHead}>{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][d]}</Text>
         ))}
       </View>
-      {Array.from({ length: weeks }, (_, w) => {
-        const rowMonday = addDays(firstMonday, w * 7);
-        const month = new Date(rowMonday + 'T00:00:00').getMonth();
-        const label = month !== prevMonth ? MONTHS[month] : '';
-        prevMonth = month;
-        return (
-          <View key={w} style={s.calRow}>
-            <Text style={s.gutter}>{label}</Text>
-            {Array.from({ length: 7 }, (_, d) => {
-              const date = addDays(rowMonday, d);
-              const future = date > t;
-              const m = future ? 0 : marks[date] ?? 0;
-              return (
-                <View
-                  key={d}
-                  style={[
-                    s.calCell,
-                    { backgroundColor: COLORS[m] === C.bg ? 'transparent' : COLORS[m] },
-                    date === t && { borderWidth: 1.5, borderColor: C.sub },
-                  ]}
-                >
-                  <Text style={[s.calDay, { color: m ? C.text : future ? C.border : C.sub }]}>
-                    {Number(date.slice(8))}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-        );
-      })}
+      {Array.from({ length: rows }, (_, w) => (
+        <View key={w} style={s.calRow}>
+          {Array.from({ length: 7 }, (_, d) => {
+            const date = addDays(gridStart, w * 7 + d);
+            const inMonth = date.slice(0, 7) === ym;
+            const mk = date > t ? 0 : marks[date] ?? 0;
+            return (
+              <View
+                key={d}
+                style={[
+                  s.calCell,
+                  mk > 0 && { backgroundColor: COLORS[mk] },
+                  date === t && { borderWidth: 1.5, borderColor: C.sub },
+                ]}
+              >
+                <Text style={[s.calDay, {
+                  color: !inMonth ? 'transparent' : mk ? C.text : date > t ? C.border : C.sub,
+                }]}>
+                  {Number(date.slice(8))}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      ))}
       <View style={s.legend}>
         {([['Lift', 1], ['Cardio', 2], ['Both', 3]] as const).map(([label, v]) => (
           <View key={label} style={s.legendItem}>
@@ -112,11 +120,13 @@ const s = StyleSheet.create({
   swim: { fontSize: 12 },
   wrap: { gap: 4 },
   grid: { flexDirection: 'row', gap: 4, justifyContent: 'space-between' },
+  monthHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4, marginBottom: 4 },
+  monthTitle: { color: C.text, fontSize: 16, fontWeight: '700' },
+  nav: { color: C.sub, fontSize: 24, paddingHorizontal: 10 },
   calRow: { flexDirection: 'row', gap: 4, alignItems: 'center' },
-  gutter: { width: 30, color: C.sub, fontSize: 11 },
   calHead: { flex: 1, textAlign: 'center', color: C.sub, fontSize: 11 },
-  calCell: { flex: 1, aspectRatio: 1.2, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
-  calDay: { fontSize: 12 },
+  calCell: { flex: 1, aspectRatio: 1.15, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  calDay: { fontSize: 13 },
   cell: { width: 18, height: 18, borderRadius: 4 },
   legend: { flexDirection: 'row', gap: 14, marginTop: 2 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },

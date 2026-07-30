@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import { Btn, Card, Label, Screen, Segmented, Sub } from '@/components/ui';
-import { HeatMap, WeekStrip } from '@/components/heat-map';
+import { MonthCalendar, WeekStrip } from '@/components/heat-map';
 import {
   activeWorkout, cardioStreakWeeks, suggestedDay, activityMarks,
   exercisesForDay, getSetting, listCardio, thisWeekCounts,
@@ -76,8 +76,7 @@ export default function Train() {
       </Card>
 
       <Card>
-        <Label>Last 8 weeks</Label>
-        <HeatMap marks={activityMarks(addDays(today(), -56), today())} />
+        <MonthCalendar />
       </Card>
     </Screen>
   );
