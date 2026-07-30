@@ -18,9 +18,15 @@ export type Exercise = {
 
 // Weight semantics: 'kg_each' = weight of ONE dumbbell (one in each hand / per side);
 // plain 'kg' = total weight of the single implement (goblet DB, EZ bar, one overhead DB).
-export const unitLabel = (u?: string) => (u === 'placas' ? ' placas' : u === 'kg_each' ? 'kg each' : 'kg');
-export const unitShort = (u?: string) => (u === 'placas' ? ' pl' : u === 'kg_each' ? 'kg ea' : 'kg');
-export const weightLabel = (u?: string) => (u === 'placas' ? 'PLACAS' : u === 'kg_each' ? 'WEIGHT (EACH DB)' : 'WEIGHT');
+const UNITS: Record<string, [label: string, short: string, stepper: string]> = {
+  placas: [' placas', ' pl', 'PLACAS'],
+  kg_each: ['kg each', 'kg ea', 'WEIGHT (EACH DB)'],
+  // EZ bar discs, both sides total (bar itself ~2kg, disc weight unstamped/unknown)
+  roscas: [' roscas', ' rsc', 'ROSCAS (TOTAL)'],
+};
+export const unitLabel = (u?: string) => UNITS[u ?? '']?.[0] ?? 'kg';
+export const unitShort = (u?: string) => UNITS[u ?? '']?.[1] ?? 'kg';
+export const weightLabel = (u?: string) => UNITS[u ?? '']?.[2] ?? 'WEIGHT';
 export type Workout = {
   id: number; day: Day; started_at: string; finished_at: string | null;
   cur_ex: number; cur_set: number;
@@ -138,11 +144,25 @@ function migrate() {
     );
     setSetting('ezbar_migrated', '1');
   }
-  // Day C gassed the legs before walking lunges every single session (never logged
-  // once), and Bulgarians cover the same pattern. Dropped 2026-07-30.
-  if (getSetting('lunges_dropped') !== '1') {
-    db.runSync("DELETE FROM exercises WHERE id='Dumbbell_Lunges'");
-    setSetting('lunges_dropped', '1');
+  // Walking lunges were briefly dropped 2026-07-30 (an OTA shipped the DELETE), but
+  // the user wants them in the plan to pick up when legs are ready. Re-insert if gone.
+  if (getSetting('lunges_restored') !== '1') {
+    db.runSync(
+      `INSERT OR IGNORE INTO exercises(id,name,day,position,sets,rep_low,rep_high,weight,increment,rest_sec,per_side,cues,lib_id,unit)
+       VALUES('Dumbbell_Lunges','DB Walking Lunge','C',4,3,8,10,8,2,90,1,?,'Dumbbell_Lunges','kg_each')`,
+      [JSON.stringify([
+        'DB in each hand, torso upright',
+        'Long step, back knee kisses the floor',
+        'Push through the front heel to step through',
+      ])],
+    );
+    setSetting('lunges_restored', '1');
+  }
+  // EZ-bar curl is loaded by disc count ("roscas", 5-8 per side), not kg — the
+  // logged 15/16/12 were already total disc counts. Increment 2 = one disc per side.
+  if (getSetting('ezbar_roscas_migrated') !== '1') {
+    db.runSync("UPDATE exercises SET unit='roscas', increment=2, weight=16 WHERE id='Dumbbell_Bicep_Curl'");
+    setSetting('ezbar_roscas_migrated', '1');
   }
 }
 

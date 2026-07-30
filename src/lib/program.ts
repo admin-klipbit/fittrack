@@ -106,7 +106,7 @@ export const SEED_EXERCISES: SeedExercise[] = [
     'Curl one arm at a time, no shoulder swing',
     'Squeeze at the top, slow negative',
   ], true),
-  ex('B', 6, 'EZ-Bar Curl (Barra W)', 'Dumbbell_Bicep_Curl', 3, 8, 12, 16, 1, 60, [
+  ex('B', 6, 'EZ-Bar Curl (Barra W)', 'Dumbbell_Bicep_Curl', 3, 8, 12, 16, 2, 60, [
     'Shoulder-width grip on the angled bar',
     'Elbows pinned — no leaning back or shrugging',
     'Full stretch at the bottom every rep',
@@ -127,7 +127,12 @@ export const SEED_EXERCISES: SeedExercise[] = [
     'Bodyweight first — add DBs when 3×10 is clean',
     'Drop straight down, front heel stays planted',
   ], true),
-  ex('C', 4, 'Standing DB Calf Raise', 'Standing_Dumbbell_Calf_Raise', 3, 12, 15, 16, 2, 60, [
+  ex('C', 4, 'DB Walking Lunge', 'Dumbbell_Lunges', 3, 8, 10, 8, 2, 90, [
+    'DB in each hand, torso upright',
+    'Long step, back knee kisses the floor',
+    'Push through the front heel to step through',
+  ], true),
+  ex('C', 5, 'Standing DB Calf Raise', 'Standing_Dumbbell_Calf_Raise', 3, 12, 15, 16, 2, 60, [
     'Balls of feet on a plate or step edge',
     'Full stretch at the bottom, pause at the top',
     'No bouncing — make the calf do it',
