@@ -21,8 +21,6 @@ export type Exercise = {
 const UNITS: Record<string, [label: string, short: string, stepper: string]> = {
   placas: [' placas', ' pl', 'PLACAS'],
   kg_each: ['kg each', 'kg ea', 'WEIGHT (EACH DB)'],
-  // EZ bar discs, both sides total (bar itself ~2kg, disc weight unstamped/unknown)
-  roscas: [' roscas', ' rsc', 'ROSCAS (TOTAL)'],
 };
 export const unitLabel = (u?: string) => UNITS[u ?? '']?.[0] ?? 'kg';
 export const unitShort = (u?: string) => UNITS[u ?? '']?.[1] ?? 'kg';
@@ -159,11 +157,12 @@ function migrate() {
     );
     setSetting('lunges_restored', '1');
   }
-  // EZ-bar curl is loaded by disc count ("roscas", 5-8 per side), not kg — the
-  // logged 15/16/12 were already total disc counts. Increment 2 = one disc per side.
-  if (getSetting('ezbar_roscas_migrated') !== '1') {
-    db.runSync("UPDATE exercises SET unit='roscas', increment=2, weight=16 WHERE id='Dumbbell_Bicep_Curl'");
-    setSetting('ezbar_roscas_migrated', '1');
+  // Correction (user, 2026-07-30): the "5-8 per side" on the EZ bar are KG (1x5kg +
+  // 1x2/3kg disc per side), not disc counts — logged weights were kg totals all along.
+  // Undo the short-lived 'roscas' unit; 2kg steps = 1kg per side.
+  if (getSetting('ezbar_kg_migrated') !== '1') {
+    db.runSync("UPDATE exercises SET unit='kg', increment=2 WHERE id='Dumbbell_Bicep_Curl'");
+    setSetting('ezbar_kg_migrated', '1');
   }
 }
 
