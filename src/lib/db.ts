@@ -29,7 +29,7 @@ export const unitShort = (u?: string) => UNITS[u ?? '']?.[1] ?? 'kg';
 export const weightLabel = (u?: string) => UNITS[u ?? '']?.[2] ?? 'WEIGHT';
 export type Workout = {
   id: number; day: Day; started_at: string; finished_at: string | null;
-  cur_ex: number; cur_set: number;
+  cur_ex: number; cur_set: number; note: string | null;
 };
 export type SetRow = {
   id: number; workout_id: number; exercise_id: string;
@@ -98,6 +98,7 @@ export function initDb() {
 
 function migrate() {
   try { db.execSync("ALTER TABLE exercises ADD COLUMN unit TEXT NOT NULL DEFAULT 'kg'"); } catch {}
+  try { db.execSync('ALTER TABLE workouts ADD COLUMN note TEXT'); } catch {}
   // Lat pulldown stack is counted in placas (plates), not kg. Convert the
   // pseudo-kg history proportionally, anchored on: close-grip 9 placas ≈ 70,
   // wide-grip 8 placas ≈ 66 (user-confirmed 2026-07-21).
@@ -248,6 +249,9 @@ export function logSet(workoutId: number, exerciseId: string, setNo: number, wei
     [workoutId, exerciseId, setNo, weight, reps, new Date().toISOString()],
   );
   mirrorData('workouts');
+}
+export function setWorkoutNote(id: number, note: string) {
+  db.runSync('UPDATE workouts SET note=? WHERE id=?', [note.trim() || null, id]);
 }
 export function finishWorkout(id: number) {
   db.runSync('UPDATE workouts SET finished_at=? WHERE id=?', [new Date().toISOString(), id]);

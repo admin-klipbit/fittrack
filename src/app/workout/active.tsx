@@ -2,7 +2,7 @@
 // auto rest timer, keep-awake, exact restore if the app is killed.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -12,7 +12,7 @@ import { Btn, Card, Label, Stepper, Sub } from '@/components/ui';
 import { RestTimer } from '@/components/rest-timer';
 import {
   Exercise, activeWorkout, completedWorkoutCount, discardWorkout, exercisesForDay,
-  finishWorkout, logSet, progression, saveWorkoutPos, setsForWorkout, startWorkout,
+  finishWorkout, logSet, progression, saveWorkoutPos, setWorkoutNote, setsForWorkout, startWorkout,
   unitLabel, unitShort, weightLabel,
 } from '@/lib/db';
 import { markDoneToday } from '@/lib/calendar';
@@ -33,6 +33,7 @@ export default function ActiveWorkout() {
   const [weight, setWeight] = useState(0);
   const [reps, setReps] = useState(0);
   const [restRun, setRestRun] = useState(0);
+  const [note, setNote] = useState(workout.note ?? '');
   const restSec = useRef(90);
   const cur: Exercise | undefined = exs[exIdx];
 
@@ -90,6 +91,7 @@ export default function ActiveWorkout() {
       router.dismissTo('/(tabs)');
       return;
     }
+    setWorkoutNote(workout.id, note);
     finishWorkout(workout.id);
     markDoneToday('workout').catch(() => {});
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -166,6 +168,14 @@ export default function ActiveWorkout() {
 
         <RestTimer seconds={restSec.current} runId={restRun} />
 
+        <Card>
+          <Label>Notes</Label>
+          <TextInput
+            style={s.note} multiline placeholder="Anything to remember — pain, form, ideas…"
+            placeholderTextColor={C.sub} value={note} onChangeText={setNote}
+            onEndEditing={() => setWorkoutNote(workout.id, note)} />
+        </Card>
+
         {doneSets.length > 0 && (
           <Card style={{ paddingVertical: 10 }}>
             {doneSets.map((d) => (
@@ -210,6 +220,10 @@ export default function ActiveWorkout() {
 }
 
 const s = StyleSheet.create({
+  note: {
+    backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 12,
+    color: C.text, fontSize: 15, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44,
+  },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   badge: {
     backgroundColor: C.accentDim, borderRadius: 10, padding: 10,
