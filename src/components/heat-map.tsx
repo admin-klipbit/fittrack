@@ -45,34 +45,53 @@ export function WeekStrip({ marks }: { marks: Record<string, number> }) {
   );
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** Real calendar of the last `weeks` weeks: rows = weeks (oldest on top), columns =
+ *  Mon–Sun, day-of-month in each cell, month labels in the left gutter. */
 export function HeatMap({ marks, weeks = 8 }: { marks: Record<string, number>; weeks?: number }) {
   const t = today();
-  // Columns = weeks (oldest left), rows = weekday Mon..Sun.
   const monday = addDays(t, -(((new Date(t + 'T00:00:00').getDay() + 6) % 7)));
   const firstMonday = addDays(monday, -7 * (weeks - 1));
+  let prevMonth = -1;
   return (
     <View style={s.wrap}>
-      <View style={s.grid}>
-        {Array.from({ length: weeks }, (_, w) => (
-          <View key={w} style={s.col}>
+      <View style={s.calRow}>
+        <Text style={s.gutter} />
+        {Array.from({ length: 7 }, (_, d) => (
+          <Text key={d} style={[s.calHead]}>{'MTWTFSS'[d]}</Text>
+        ))}
+      </View>
+      {Array.from({ length: weeks }, (_, w) => {
+        const rowMonday = addDays(firstMonday, w * 7);
+        const month = new Date(rowMonday + 'T00:00:00').getMonth();
+        const label = month !== prevMonth ? MONTHS[month] : '';
+        prevMonth = month;
+        return (
+          <View key={w} style={s.calRow}>
+            <Text style={s.gutter}>{label}</Text>
             {Array.from({ length: 7 }, (_, d) => {
-              const date = addDays(firstMonday, w * 7 + d);
+              const date = addDays(rowMonday, d);
               const future = date > t;
+              const m = future ? 0 : marks[date] ?? 0;
               return (
                 <View
                   key={d}
                   style={[
-                    s.cell,
-                    { backgroundColor: future ? 'transparent' : COLORS[marks[date] ?? 0] },
-                    !future && !marks[date] && { borderWidth: 1, borderColor: C.border },
+                    s.calCell,
+                    { backgroundColor: COLORS[m] === C.bg ? 'transparent' : COLORS[m] },
                     date === t && { borderWidth: 1.5, borderColor: C.sub },
                   ]}
-                />
+                >
+                  <Text style={[s.calDay, { color: m ? C.text : future ? C.border : C.sub }]}>
+                    {Number(date.slice(8))}
+                  </Text>
+                </View>
               );
             })}
           </View>
-        ))}
-      </View>
+        );
+      })}
       <View style={s.legend}>
         {([['Lift', 1], ['Cardio', 2], ['Both', 3]] as const).map(([label, v]) => (
           <View key={label} style={s.legendItem}>
@@ -91,9 +110,13 @@ const s = StyleSheet.create({
   dayCell: { width: 34, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   dayLetter: { fontSize: 15, fontWeight: '700' },
   swim: { fontSize: 12 },
-  wrap: { gap: 8 },
+  wrap: { gap: 4 },
   grid: { flexDirection: 'row', gap: 4, justifyContent: 'space-between' },
-  col: { gap: 4 },
+  calRow: { flexDirection: 'row', gap: 4, alignItems: 'center' },
+  gutter: { width: 30, color: C.sub, fontSize: 11 },
+  calHead: { flex: 1, textAlign: 'center', color: C.sub, fontSize: 11 },
+  calCell: { flex: 1, aspectRatio: 1.2, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  calDay: { fontSize: 12 },
   cell: { width: 18, height: 18, borderRadius: 4 },
   legend: { flexDirection: 'row', gap: 14, marginTop: 2 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },

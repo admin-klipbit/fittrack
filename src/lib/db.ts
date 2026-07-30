@@ -1,6 +1,6 @@
 import { openDatabaseSync } from 'expo-sqlite';
 import {
-  DAYS, DEFAULT_BLOCKS, Day, PROGRAM_START, SEED_EXERCISES, START_WEIGHT, localISODate, programWeek, weekDates,
+  DAYS, DEFAULT_BLOCKS, Day, PROGRAM_START, SEED_EXERCISES, START_WEIGHT, addDays, calendarWeekDates, localISODate,
 } from './program';
 import { mirrorData } from './mirror';
 
@@ -403,7 +403,7 @@ export function latestProgressPhoto(angle: string): ProgressPhoto | null {
 // ---- dashboard helpers ----
 
 export function thisWeekCounts() {
-  const { start, end } = weekDates();
+  const { start, end } = calendarWeekDates();
   const workoutsN = db.getFirstSync<{ n: number }>(
     "SELECT COUNT(*) n FROM workouts WHERE finished_at IS NOT NULL AND date(started_at,'localtime') BETWEEN ? AND ?",
     [start, end],
@@ -416,13 +416,12 @@ export function thisWeekCounts() {
 
 /** Consecutive program weeks (ending this week) that hit the weekly cardio target. */
 export function cardioStreakWeeks(target: number): number {
-  const current = programWeek();
   let streak = 0;
-  for (let w = current; w >= 1; w--) {
-    const { start, end } = weekDates(w);
-    const n = db.getFirstSync<{ n: number }>('SELECT COUNT(*) n FROM cardio WHERE date BETWEEN ? AND ?', [start, end])?.n ?? 0;
+  const cur = calendarWeekDates().start;
+  for (let start = cur; addDays(start, 6) >= PROGRAM_START; start = addDays(start, -7)) {
+    const n = db.getFirstSync<{ n: number }>('SELECT COUNT(*) n FROM cardio WHERE date BETWEEN ? AND ?', [start, addDays(start, 6)])?.n ?? 0;
     if (n >= target) streak++;
-    else if (w !== current) break; // current week still in progress doesn't break the streak
+    else if (start !== cur) break; // current week still in progress doesn't break the streak
   }
   return streak;
 }

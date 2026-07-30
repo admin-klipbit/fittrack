@@ -179,7 +179,14 @@ export function blockDates(block: number) {
   return { start, end };
 }
 
-/** Current program week's date range. */
+/** Mon–Sun calendar week containing dateStr — weekly targets align to real weeks,
+ *  not to the program's Thursday anchor. */
+export function calendarWeekDates(dateStr: string = today()) {
+  const start = addDays(dateStr, -((parseDate(dateStr).getDay() + 6) % 7));
+  return { start, end: addDays(start, 6) };
+}
+
+/** Current program week's date range (start-date anchored — block/timeline math). */
 export function weekDates(week: number = programWeek()) {
   const start = addDays(PROGRAM_START, (week - 1) * 7);
   return { start, end: addDays(start, 6) };
