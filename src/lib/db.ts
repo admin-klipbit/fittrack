@@ -138,6 +138,12 @@ function migrate() {
     );
     setSetting('ezbar_migrated', '1');
   }
+  // Day C gassed the legs before walking lunges every single session (never logged
+  // once), and Bulgarians cover the same pattern. Dropped 2026-07-30.
+  if (getSetting('lunges_dropped') !== '1') {
+    db.runSync("DELETE FROM exercises WHERE id='Dumbbell_Lunges'");
+    setSetting('lunges_dropped', '1');
+  }
 }
 
 function seed() {
