@@ -2,7 +2,7 @@
 // auto rest timer, keep-awake, exact restore if the app is killed.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useKeepAwake } from 'expo-keep-awake';
@@ -41,6 +41,7 @@ export default function ActiveWorkout() {
   // the latest text so we can flush on exercise change / finish (onEndEditing
   // doesn't fire when navigating away programmatically).
   const [exNote, setExNote] = useState('');
+  const [noteFocus, setNoteFocus] = useState<'ex' | 'session' | null>(null);
   const exNoteRef = useRef({ exId: '', text: '' });
   const flushExNote = () => {
     const { exId, text } = exNoteRef.current;
@@ -188,20 +189,32 @@ export default function ActiveWorkout() {
         <RestTimer seconds={restSec.current} runId={restRun} />
 
         <Card>
-          <Label>Note — {cur.name}</Label>
+          <View style={s.noteHead}>
+            <Label>Note — {cur.name}</Label>
+            {noteFocus === 'ex' && <Pressable onPress={() => Keyboard.dismiss()} hitSlop={10}>
+              <Text style={s.noteDone}>✓ Done</Text>
+            </Pressable>}
+          </View>
           {!!prevExNote && <Sub>Last time: {prevExNote}</Sub>}
           <TextInput
             style={s.note} multiline placeholder="This exercise — weight, pain, form…"
             placeholderTextColor={C.sub} value={exNote}
+            onFocus={() => setNoteFocus('ex')} onBlur={() => setNoteFocus(null)}
             onChangeText={(t) => { setExNote(t); exNoteRef.current = { exId: cur.id, text: t }; }}
             onEndEditing={flushExNote} />
         </Card>
 
         <Card>
-          <Label>Session notes</Label>
+          <View style={s.noteHead}>
+            <Label>Session notes</Label>
+            {noteFocus === 'session' && <Pressable onPress={() => Keyboard.dismiss()} hitSlop={10}>
+              <Text style={s.noteDone}>✓ Done</Text>
+            </Pressable>}
+          </View>
           <TextInput
             style={s.note} multiline placeholder="Anything to remember — pain, form, ideas…"
             placeholderTextColor={C.sub} value={note} onChangeText={setNote}
+            onFocus={() => setNoteFocus('session')} onBlur={() => setNoteFocus(null)}
             onEndEditing={() => setWorkoutNote(workout.id, note)} />
         </Card>
 
@@ -253,6 +266,8 @@ const s = StyleSheet.create({
     backgroundColor: C.bg, borderWidth: 1, borderColor: C.border, borderRadius: 12,
     color: C.text, fontSize: 15, paddingHorizontal: 12, paddingVertical: 10, minHeight: 44,
   },
+  noteHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  noteDone: { color: C.accent, fontSize: 15, fontWeight: '700' },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   badge: {
     backgroundColor: C.accentDim, borderRadius: 10, padding: 10,
