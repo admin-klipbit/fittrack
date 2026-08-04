@@ -8,7 +8,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import { Btn, Card, Label, Screen, Sub } from '@/components/ui';
 import { LineChart } from '@/components/line-chart';
-import { addWeighin, progressPhotos, weighinsWithAvg } from '@/lib/db';
+import { addWaist, addWeighin, progressPhotos, waists, weighinsWithAvg } from '@/lib/db';
 import { photoUri } from '@/lib/mirror';
 import { programWeek, today } from '@/lib/program';
 import { C } from '@/lib/theme';
@@ -19,8 +19,10 @@ export default function Body() {
   const [, setTick] = useState(0);
   useFocusEffect(useCallback(() => setTick((t) => t + 1), []));
   const [kgInput, setKgInput] = useState('');
+  const [waistInput, setWaistInput] = useState('');
 
   const weights = weighinsWithAvg();
+  const waist = waists();
   const fronts = progressPhotos('front'); // cheap; recomputes on focus tick
 
   const save = () => {
@@ -28,6 +30,14 @@ export default function Body() {
     if (!kg || kg < 30 || kg > 250) return;
     addWeighin(today(), Math.round(kg * 10) / 10);
     setKgInput('');
+    setTick((t) => t + 1);
+  };
+
+  const saveWaist = () => {
+    const cm = parseFloat(waistInput.replace(',', '.'));
+    if (!cm || cm < 40 || cm > 200) return;
+    addWaist(today(), Math.round(cm * 10) / 10);
+    setWaistInput('');
     setTick((t) => t + 1);
   };
 
@@ -50,6 +60,27 @@ export default function Body() {
         </View>
         <LineChart points={weights.slice(-90).map((w) => ({ x: w.date, y: w.kg, avg: w.avg }))} />
         <Sub>Thin line: daily · Green: 7-day average (the one that matters). Reminders Mon + Thu.</Sub>
+      </Card>
+
+      <Card>
+        <Label>Waist</Label>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TextInput
+            style={s.input}
+            placeholder="88.5"
+            placeholderTextColor={C.sub}
+            keyboardType="decimal-pad"
+            value={waistInput}
+            onChangeText={setWaistInput}
+            returnKeyType="done"
+            onSubmitEditing={saveWaist}
+          />
+          <Btn title="Save cm" onPress={saveWaist} style={{ paddingHorizontal: 20 }} />
+        </View>
+        {waist.length > 1 && (
+          <LineChart height={120} points={waist.slice(-90).map((w) => ({ x: w.date, y: w.cm }))} />
+        )}
+        <Sub>Tape at the navel, relaxed — Mondays with the weigh-in. Waist down + scale flat = recomp working.</Sub>
       </Card>
 
       <Card>

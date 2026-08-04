@@ -85,6 +85,7 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS weighins(
       id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL UNIQUE, kg REAL NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS waist(date TEXT PRIMARY KEY, cm REAL NOT NULL);
     CREATE TABLE IF NOT EXISTS meals(
       id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, time TEXT NOT NULL,
       type TEXT NOT NULL, photo TEXT NOT NULL, description TEXT
@@ -384,6 +385,17 @@ export function weighinsWithAvg(): (Weighin & { avg: number })[] {
     const win = all.filter((x) => x.date >= fromStr && x.date <= w.date);
     return { ...w, avg: win.reduce((s, x) => s + x.kg, 0) / win.length };
   });
+}
+
+// ---- waist (recomp signal: waist down + scale flat = fat loss with muscle kept) ----
+
+export type Waist = { date: string; cm: number };
+export function addWaist(date: string, cm: number) {
+  db.runSync('INSERT INTO waist(date,cm) VALUES(?,?) ON CONFLICT(date) DO UPDATE SET cm=excluded.cm', [date, cm]);
+  mirrorData('waist');
+}
+export function waists(): Waist[] {
+  return db.getAllSync<Waist>('SELECT * FROM waist ORDER BY date');
 }
 
 // ---- meals ----

@@ -55,7 +55,7 @@ export function savePhoto(srcUri: string, rel: string): string {
 
 // ---- JSON mirrors ----
 
-type Kind = 'workouts' | 'cardio' | 'weighins' | 'meals' | 'progress';
+type Kind = 'workouts' | 'cardio' | 'weighins' | 'waist' | 'meals' | 'progress';
 
 function buildJson(kind: Kind): unknown {
   switch (kind) {
@@ -81,6 +81,8 @@ function buildJson(kind: Kind): unknown {
       return db.getAllSync('SELECT * FROM cardio ORDER BY date');
     case 'weighins':
       return db.getAllSync('SELECT date, kg FROM weighins ORDER BY date');
+    case 'waist':
+      return db.getAllSync('SELECT date, cm FROM waist ORDER BY date');
     case 'meals':
       // text-only meals store '' — surface as null so the nightly review knows there's no image
       return db.getAllSync("SELECT date, time, type, NULLIF(photo,'') photo, description FROM meals ORDER BY date, time");
@@ -99,7 +101,7 @@ export function mirrorData(kind: Kind) {
 }
 
 export function mirrorAll() {
-  (['workouts', 'cardio', 'weighins', 'meals', 'progress'] as Kind[]).forEach(mirrorData);
+  (['workouts', 'cardio', 'weighins', 'waist', 'meals', 'progress'] as Kind[]).forEach(mirrorData);
   // Program context for the nightly coach: where we are, block names/goals.
   try {
     const { block, weekInBlock, week } = blockInfo();
@@ -152,6 +154,7 @@ export function writeExportFile(): string {
     workouts: buildJson('workouts'),
     cardio: buildJson('cardio'),
     weighins: buildJson('weighins'),
+    waist: buildJson('waist'),
     meals: buildJson('meals'),
     progress: buildJson('progress'),
   };
