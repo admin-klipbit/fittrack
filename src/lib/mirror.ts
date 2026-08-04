@@ -67,6 +67,10 @@ function buildJson(kind: Kind): unknown {
         started_at: w.started_at,
         finished_at: w.finished_at,
         note: w.note ?? null,
+        exercise_notes: db.getAllSync<any>(
+          `SELECT n.exercise_id, e.name exercise, n.note
+           FROM exercise_notes n LEFT JOIN exercises e ON e.id=n.exercise_id
+           WHERE n.workout_id=? ORDER BY n.rowid`, [w.id]),
         sets: db.getAllSync<any>(
           `SELECT s.exercise_id, e.name exercise, s.set_no, s.weight, e.unit, s.reps, s.done_at
            FROM sets s LEFT JOIN exercises e ON e.id=s.exercise_id

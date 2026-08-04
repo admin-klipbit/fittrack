@@ -73,6 +73,11 @@ export function initDb() {
       exercise_id TEXT NOT NULL, set_no INTEGER NOT NULL,
       weight REAL NOT NULL, reps INTEGER NOT NULL, done_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS exercise_notes(
+      workout_id INTEGER NOT NULL REFERENCES workouts(id),
+      exercise_id TEXT NOT NULL, note TEXT NOT NULL,
+      PRIMARY KEY(workout_id, exercise_id)
+    );
     CREATE TABLE IF NOT EXISTS cardio(
       id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, type TEXT NOT NULL,
       duration_min REAL, distance_km REAL, meters INTEGER, rpe INTEGER, note TEXT, photo TEXT
@@ -252,12 +257,32 @@ export function logSet(workoutId: number, exerciseId: string, setNo: number, wei
 export function setWorkoutNote(id: number, note: string) {
   db.runSync('UPDATE workouts SET note=? WHERE id=?', [note.trim() || null, id]);
 }
+export function exerciseNote(workoutId: number, exerciseId: string): string {
+  return db.getFirstSync<{ note: string }>(
+    'SELECT note FROM exercise_notes WHERE workout_id=? AND exercise_id=?', [workoutId, exerciseId])?.note ?? '';
+}
+export function setExerciseNote(workoutId: number, exerciseId: string, note: string) {
+  const t = note.trim();
+  if (t) db.runSync('INSERT OR REPLACE INTO exercise_notes(workout_id,exercise_id,note) VALUES(?,?,?)', [workoutId, exerciseId, t]);
+  else db.runSync('DELETE FROM exercise_notes WHERE workout_id=? AND exercise_id=?', [workoutId, exerciseId]);
+  mirrorData('workouts');
+}
+/** Most recent finished-workout note for this exercise — shown next session so
+ *  "reducing to 6kg to test"-style reminders resurface where they apply. */
+export function lastExerciseNote(exerciseId: string, excludeWorkoutId?: number): string {
+  return db.getFirstSync<{ note: string }>(
+    `SELECT n.note FROM exercise_notes n JOIN workouts w ON w.id=n.workout_id
+     WHERE n.exercise_id=? AND w.finished_at IS NOT NULL AND w.id != ?
+     ORDER BY w.started_at DESC LIMIT 1`,
+    [exerciseId, excludeWorkoutId ?? -1])?.note ?? '';
+}
 export function finishWorkout(id: number) {
   db.runSync('UPDATE workouts SET finished_at=? WHERE id=?', [new Date().toISOString(), id]);
   mirrorData('workouts');
 }
 export function discardWorkout(id: number) {
   db.runSync('DELETE FROM sets WHERE workout_id=?', [id]);
+  db.runSync('DELETE FROM exercise_notes WHERE workout_id=?', [id]);
   db.runSync('DELETE FROM workouts WHERE id=?', [id]);
   mirrorData('workouts');
 }

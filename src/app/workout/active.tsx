@@ -11,8 +11,9 @@ import { Image } from 'expo-image';
 import { Btn, Card, Label, Stepper, Sub } from '@/components/ui';
 import { RestTimer } from '@/components/rest-timer';
 import {
-  Exercise, activeWorkout, discardWorkout, exercisesForDay,
-  finishWorkout, logSet, progression, saveWorkoutPos, setWorkoutNote, setsForWorkout, startWorkout, suggestedDay,
+  Exercise, activeWorkout, discardWorkout, exerciseNote, exercisesForDay,
+  finishWorkout, lastExerciseNote, logSet, progression, saveWorkoutPos, setExerciseNote, setWorkoutNote,
+  setsForWorkout, startWorkout, suggestedDay,
   unitLabel, unitShort, weightLabel,
 } from '@/lib/db';
 import { photoUri } from '@/lib/mirror';
@@ -35,6 +36,25 @@ export default function ActiveWorkout() {
   const [note, setNote] = useState(workout.note ?? '');
   const restSec = useRef(90);
   const cur: Exercise | undefined = exs[exIdx];
+
+  // Per-exercise note: one box that follows the current exercise. The ref holds
+  // the latest text so we can flush on exercise change / finish (onEndEditing
+  // doesn't fire when navigating away programmatically).
+  const [exNote, setExNote] = useState('');
+  const exNoteRef = useRef({ exId: '', text: '' });
+  const flushExNote = () => {
+    const { exId, text } = exNoteRef.current;
+    if (exId) setExerciseNote(workout.id, exId, text);
+  };
+  useEffect(() => {
+    if (!cur) return;
+    flushExNote();
+    const t = exerciseNote(workout.id, cur.id);
+    setExNote(t);
+    exNoteRef.current = { exId: cur.id, text: t };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cur?.id]);
+  const prevExNote = useMemo(() => (cur ? lastExerciseNote(cur.id, workout.id) : ''), [cur?.id, workout.id]);
 
   const prog = useMemo(() => (cur ? progression(cur, workout.id) : null), [cur?.id, workout.id]);
 
@@ -91,6 +111,7 @@ export default function ActiveWorkout() {
       return;
     }
     setWorkoutNote(workout.id, note);
+    flushExNote();
     finishWorkout(workout.id);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.replace(`/workout/summary?id=${workout.id}`);
@@ -167,7 +188,17 @@ export default function ActiveWorkout() {
         <RestTimer seconds={restSec.current} runId={restRun} />
 
         <Card>
-          <Label>Notes</Label>
+          <Label>Note — {cur.name}</Label>
+          {!!prevExNote && <Sub>Last time: {prevExNote}</Sub>}
+          <TextInput
+            style={s.note} multiline placeholder="This exercise — weight, pain, form…"
+            placeholderTextColor={C.sub} value={exNote}
+            onChangeText={(t) => { setExNote(t); exNoteRef.current = { exId: cur.id, text: t }; }}
+            onEndEditing={flushExNote} />
+        </Card>
+
+        <Card>
+          <Label>Session notes</Label>
           <TextInput
             style={s.note} multiline placeholder="Anything to remember — pain, form, ideas…"
             placeholderTextColor={C.sub} value={note} onChangeText={setNote}
